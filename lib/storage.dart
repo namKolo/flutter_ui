@@ -17,7 +17,7 @@ class Storage {
     await (path).writeAsString(jsonEncode(recentProjects.getProjects()));
   }
 
-  readRecentProjects() async {
+  Future<List<Project>> readRecentProjects() async {
     final file = await _getLocalFile();
     String jsonStr = await file.readAsString();
 

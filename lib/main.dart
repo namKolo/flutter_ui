@@ -8,20 +8,20 @@ import 'package:flutter_ui/recent_projects.dart';
 import 'package:flutter_ui/storage.dart';
 
 void main() {
-  runApp(new SuperSuperWidget(
+  runApp(new SuperApp(
     store: Storage(),
   ));
 }
 
-class SuperSuperWidget extends StatefulWidget {
+class SuperApp extends StatefulWidget {
   final Storage store;
-  SuperSuperWidget({Key key, this.store}) : super(key: key);
+  SuperApp({Key key, this.store}) : super(key: key);
 
   @override
-  _SuperSuperWidgetState createState() => _SuperSuperWidgetState();
+  _SuperAppState createState() => _SuperAppState();
 }
 
-class _SuperSuperWidgetState extends State<SuperSuperWidget> {
+class _SuperAppState extends State<SuperApp> {
   RecentProjects _recentProjects;
 
   @override
@@ -33,12 +33,6 @@ class _SuperSuperWidgetState extends State<SuperSuperWidget> {
         _recentProjects.addProjects(p);
       });
     });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    print("Dispose");
   }
 
   // This widget is the root of your application.
@@ -53,23 +47,24 @@ class _SuperSuperWidgetState extends State<SuperSuperWidget> {
 
   Row buildRow() {
     return Row(
-      children: [
-        buildLeftExpanded(),
-        Expanded(
-            child: DefaultTextStyle(
-          style: TextStyle(color: Colors.white),
-          child: Container(
-            padding: EdgeInsets.all(10),
-            color: Color.fromRGBO(27, 27, 27, 1),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [Text("RECENT PROJECTS"), buildRecentProjectList()],
-            ),
-          ),
-        ))
-      ],
+      children: [buildLogoAndActionColumn(), buildRecentProjectColumn()],
     );
+  }
+
+  Expanded buildRecentProjectColumn() {
+    return Expanded(
+        child: DefaultTextStyle(
+      style: TextStyle(color: Colors.white),
+      child: Container(
+        padding: EdgeInsets.all(10),
+        color: Color.fromRGBO(27, 27, 27, 1),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [Text("RECENT PROJECTS"), buildRecentProjectList()],
+        ),
+      ),
+    ));
   }
 
   Column buildRecentProjectList() {
@@ -85,7 +80,7 @@ class _SuperSuperWidgetState extends State<SuperSuperWidget> {
                 .toList());
   }
 
-  Expanded buildLeftExpanded() {
+  Expanded buildLogoAndActionColumn() {
     return Expanded(
         child: DefaultTextStyle(
       style: TextStyle(color: Colors.white),
@@ -109,16 +104,7 @@ class _SuperSuperWidgetState extends State<SuperSuperWidget> {
                   new ActionListItem(
                       title: "Open a local repository",
                       subTitle: "Open an existing project on your computer",
-                      onPressed: () async {
-                        final result = await showOpenPanel(
-                            allowsMultipleSelection: true,
-                            canSelectDirectories: true);
-                        final path = result.paths.join('\n');
-                        setState(() {
-                          _recentProjects.addProject(Project("tmp", path));
-                        });
-                        await widget.store.writeRecentProjects(_recentProjects);
-                      }),
+                      onPressed: openLocalRepo),
                   new ActionListItem(
                     title: "Clone a remote repository",
                     subTitle: "Clone a remote project from GitHub, BitBucket",
@@ -134,6 +120,16 @@ class _SuperSuperWidgetState extends State<SuperSuperWidget> {
         ),
       ),
     ));
+  }
+
+  openLocalRepo() async {
+    final result = await showOpenPanel(
+        allowsMultipleSelection: true, canSelectDirectories: true);
+    final path = result.paths.join('\n');
+    setState(() {
+      _recentProjects.addProject(Project("tmp", path));
+    });
+    await widget.store.writeRecentProjects(_recentProjects);
   }
 }
 
@@ -157,7 +153,7 @@ class _ActionListItemState extends State<ActionListItem> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: widget.onPressed,
+      onTap: widget.onPressed ?? () => {},
       child: MouseRegion(
           onHover: (event) {
             setState(() {
